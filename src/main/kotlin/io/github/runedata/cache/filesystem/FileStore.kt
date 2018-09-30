@@ -137,7 +137,9 @@ class FileStore(
             if (!dataFile.exists()) throw FileNotFoundException()
             val indexFiles = mutableListOf<File>()
             for (indexFileId in 0 until METACHANNEL_INDEX_ID) {
-                indexFiles.add(File(root, "$DEFAULT_FILE_NAME$INDEX_FILE_EXTENSION$indexFileId"))
+                val file = File(root, "$DEFAULT_FILE_NAME$INDEX_FILE_EXTENSION$indexFileId")
+                if(!file.exists()) break
+                indexFiles.add(file)
             }
             if (indexFiles.isEmpty()) throw FileNotFoundException()
             val metaFile = File(root, "$DEFAULT_FILE_NAME$INDEX_FILE_EXTENSION$METACHANNEL_INDEX_ID")
