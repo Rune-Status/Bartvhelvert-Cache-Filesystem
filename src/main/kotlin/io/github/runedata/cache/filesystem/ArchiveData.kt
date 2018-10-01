@@ -15,12 +15,9 @@
  */
 package io.github.runedata.cache.filesystem
 
-import io.github.runedata.cache.filesystem.crypto.Compression
+import io.github.runedata.cache.filesystem.crypto.Bzip2
+import io.github.runedata.cache.filesystem.crypto.Gzip2
 import io.github.runedata.cache.filesystem.crypto.Xtea
-import io.github.runedata.cache.filesystem.util.getByteArray
-import io.github.runedata.cache.filesystem.util.toByteArray
-import io.github.runedata.cache.filesystem.util.xteaDecipher
-import io.github.runedata.cache.filesystem.util.xteaEncipher
 import java.io.IOException
 import java.nio.ByteBuffer
 
@@ -34,11 +31,11 @@ class ArchiveData(val compressionType: Int, val data: ByteBuffer, var version: I
 
     fun encode(xteaKeys: IntArray): ByteBuffer {
         val compressedData = data.compress()
-        val headerSize = 5 + (if (compressionType == Compression.NONE.opcode) 0 else 4) + if (isVersioned()) 2 else 0
+        val headerSize = 5 + (if (compressionType == COMPRESSION_NONE) 0 else 4) + if (isVersioned()) 2 else 0
         val buffer = ByteBuffer.allocate(headerSize + compressedData.size)
         buffer.put(compressionType.toByte())
         buffer.putInt(compressedData.size)
-        if (compressionType != Compression.NONE.opcode) {
+        if (compressionType != COMPRESSION_NONE) {
             buffer.putInt(data.limit())
         }
         buffer.put(compressedData)
@@ -49,14 +46,18 @@ class ArchiveData(val compressionType: Int, val data: ByteBuffer, var version: I
     }
 
     private fun ByteBuffer.compress(): ByteArray {
-        return Compression.values().find { it.opcode == compressionType }?.compress(toByteArray()) ?:
-            throw IOException("Unsupported compression method")
+        return when (compressionType) {
+        COMPRESSION_NONE -> toByteArray()
+            COMPRESSION_GZIP -> Gzip2.zip(toByteArray())
+            COMPRESSION_BZIP2 -> Bzip2.zip(toByteArray())
+            else -> throw IOException("Invalid compression")
+        }
     }
 
     private fun ByteBuffer.encryptCompressedData(xteaKeys: IntArray, compressedLength: Int): ByteBuffer {
         return if (xteaKeys.all { it != 0 }) {
             xteaEncipher(xteaKeys, start = 5, end = compressedLength +
-                    if (compressionType == Compression.NONE.opcode) 5 else 9)
+                    if (compressionType == COMPRESSION_NONE) 5 else 9)
         } else {
             return this
         }
@@ -71,20 +72,26 @@ class ArchiveData(val compressionType: Int, val data: ByteBuffer, var version: I
     }
 
     companion object {
+        const val COMPRESSION_NONE = 0
+        const val COMPRESSION_BZIP2 = 1
+        const val COMPRESSION_GZIP = 2
+
         fun decode(buffer: ByteBuffer, xteaKeys: IntArray = Xtea.NULL_KEYS): ArchiveData {
             val compressionType = buffer.get().toInt() and 0xFF
             val compressedSize = buffer.int
             buffer.decryptCompressedData(xteaKeys, compressionType, compressedSize)
 
-            if (compressionType == Compression.NONE.opcode) {
+            if (compressionType == COMPRESSION_NONE) {
                 val data = ByteBuffer.wrap(buffer.getByteArray(compressedSize))
                 val version = decodeVersion(buffer)
                 return ArchiveData(compressionType, data, version)
             } else {
                 val uncompressedSize = buffer.int
-                val uncompressed = Compression.values().find { it.opcode == compressionType }?.
-                        decompress(buffer.getByteArray(compressedSize))
-                        ?: throw IOException("Unsupported decompression method")
+                val uncompressed = when (compressionType) {
+                    COMPRESSION_BZIP2 -> Bzip2.unzip(buffer.getByteArray(compressedSize))
+                    COMPRESSION_GZIP -> Gzip2.unzip(buffer.getByteArray(compressedSize))
+                    else -> throw IOException("Invalid compression indexId")
+                }
                 if (uncompressed.size != uncompressedSize) {
                     throw IOException("Uncompressed size mismatch")
                 }
@@ -106,7 +113,7 @@ class ArchiveData(val compressionType: Int, val data: ByteBuffer, var version: I
         private fun ByteBuffer.decryptCompressedData(xteaKeys: IntArray, compressionType: Int, compressedLength: Int): ByteBuffer {
             return if (xteaKeys.all { it != 0 }) {
                 xteaDecipher(xteaKeys, 5, compressedLength +
-                        if (compressionType == Compression.NONE.opcode) 5 else 9)
+                        if (compressionType == COMPRESSION_NONE) 5 else 9)
             } else {
                 this
             }

@@ -15,20 +15,20 @@
  */
 package io.github.runedata.cache.filesystem.crypto
 
-import java.math.BigInteger
-import java.nio.ByteBuffer
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import java.security.MessageDigest
+import java.security.Security
 
-fun rsaCrypt(buffer: ByteBuffer, modulus: BigInteger, key: BigInteger): ByteBuffer {
-    val bytes = ByteArray(buffer.limit())
-    buffer.get(bytes)
-    val inb = BigInteger(bytes)
-    val out = inb.modPow(key, modulus)
-    return ByteBuffer.wrap(out.toByteArray())
+fun djb2Hash(str: String): Int {
+    var hash = 0
+    for (i in 0 until str.length) {
+        hash = str[i].toInt() + ((hash shl 5) - hash)
+    }
+    return hash
 }
 
-object Xtea {
-    const val GOLDEN_RATIO = -0x61c88647
-    const val ROUNDS = 32
-    const val KEY_SIZE = 4
-    val NULL_KEYS = IntArray(KEY_SIZE)
+fun whirlPoolHash(data: ByteArray):ByteArray {
+    Security.addProvider(BouncyCastleProvider())
+    val messageDigest = MessageDigest.getInstance("Whirlpool")
+    return messageDigest.digest(data)
 }

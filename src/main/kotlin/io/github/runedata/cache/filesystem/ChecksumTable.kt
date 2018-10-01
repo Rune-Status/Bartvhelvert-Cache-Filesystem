@@ -15,8 +15,8 @@
  */
 package io.github.runedata.cache.filesystem
 
-import io.github.runedata.cache.filesystem.crypto.Rsa
-import io.github.runedata.cache.filesystem.crypto.Whirlpool
+import io.github.runedata.cache.filesystem.crypto.rsaCrypt
+import io.github.runedata.cache.filesystem.crypto.whirlPoolHash
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.IOException
@@ -58,11 +58,11 @@ class ChecksumTable(val size: Int) {
                 var bytes = bout.toByteArray()
                 var temp = ByteBuffer.allocate(65)
                 temp.put(0.toByte())
-                temp.put(Whirlpool.whirlpool(bytes, 0, bytes.size))
+                temp.put(whirlPoolHash(bytes))
                 temp.flip()
 
                 if (modulus != null && privateKey != null) {
-                    temp = Rsa.crypt(temp, modulus, privateKey)
+                    temp = rsaCrypt(temp, modulus, privateKey)
                 }
 
                 bytes = ByteArray(temp.limit())
@@ -114,7 +114,7 @@ class ChecksumTable(val size: Int) {
                 val temp = ByteArray(size * 80 + 1)
                 buffer.position(0)
                 buffer.get(temp)
-                masterDigest = Whirlpool.whirlpool(temp, 0, temp.size)
+                masterDigest = whirlPoolHash(temp)
             }
 
             buffer.position(if (whirlpool) 1 else 0)
@@ -143,7 +143,7 @@ class ChecksumTable(val size: Int) {
                 var temp = ByteBuffer.wrap(bytes)
 
                 if (mod != null && publicKey != null) {
-                    temp = Rsa.crypt(buffer, mod, publicKey)
+                    temp = rsaCrypt(buffer, mod, publicKey)
                 }
 
                 if (temp.limit() != 65) throw IOException("Decrypted data length mismatch")

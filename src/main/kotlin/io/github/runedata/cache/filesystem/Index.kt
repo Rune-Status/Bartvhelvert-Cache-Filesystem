@@ -15,8 +15,6 @@
  */
 package io.github.runedata.cache.filesystem
 
-import io.github.runedata.cache.filesystem.util.getMedium
-import io.github.runedata.cache.filesystem.util.putMedium
 import java.nio.ByteBuffer
 
 /** An entry of an index file. An [Index] is a reference to an entry in the data file. */

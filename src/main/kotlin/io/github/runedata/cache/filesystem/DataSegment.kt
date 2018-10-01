@@ -15,8 +15,6 @@
  */
 package io.github.runedata.cache.filesystem
 
-import io.github.runedata.cache.filesystem.util.getMedium
-import io.github.runedata.cache.filesystem.util.putMedium
 import java.io.IOException
 import java.nio.ByteBuffer
 

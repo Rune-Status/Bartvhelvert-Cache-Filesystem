@@ -15,10 +15,8 @@
  */
 package io.github.runedata.cache.filesystem
 
-import io.github.runedata.cache.filesystem.util.getCrcChecksum
-import io.github.runedata.cache.filesystem.crypto.Djb2
 import io.github.runedata.cache.filesystem.crypto.Xtea
-import io.github.runedata.cache.filesystem.util.getWhirlpoolDigest
+import io.github.runedata.cache.filesystem.crypto.djb2Hash
 import java.io.Closeable
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -102,7 +100,7 @@ class CacheStore(val fileStore: FileStore, val xteas: Map<Int, IntArray>) : Clos
     fun getFileId(type: Int, name: String): Int {
         if (!identifiers.containsKey(name)) {
             val table = referenceTables[type]
-            identifiers[name] = table.identifiers!!.getFile(Djb2.hash(name))
+            identifiers[name] = table.identifiers!!.getFile(djb2Hash(name))
         }
         val i = identifiers[name]
         return i ?: -1

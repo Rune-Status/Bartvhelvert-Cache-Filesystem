@@ -13,10 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package io.github.runedata.cache.filesystem.util
+package io.github.runedata.cache.filesystem
 
-import io.github.runedata.cache.filesystem.crypto.Whirlpool
 import io.github.runedata.cache.filesystem.crypto.Xtea
+import io.github.runedata.cache.filesystem.crypto.whirlPoolHash
 import java.nio.ByteBuffer
 import java.util.zip.CRC32
 
@@ -168,5 +168,5 @@ fun ByteBuffer.xteaDecipher(keys: IntArray, start: Int, end: Int): ByteBuffer {
 fun ByteBuffer.getWhirlpoolDigest(): ByteArray {
     val bytes = ByteArray(limit())
     get(bytes)
-    return Whirlpool.whirlpool(bytes, 0, bytes.size)
+    return whirlPoolHash(bytes)
 }

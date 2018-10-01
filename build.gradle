@@ -13,10 +13,17 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: bouncyCastleVersion
     implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlinVersion
-    implementation group: 'org.apache.commons', name: 'commons-compress', version: commonsCompressVersion
+    implementation group: 'org.apache.ant', name: 'ant', version: antVersion
     implementation group: 'io.github.microutils', name: 'kotlin-logging', version: kotlinLogVersion
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: sl4jVersion
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitVersion
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: junitVersion
+    testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitVersion
+    testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
+    testImplementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: jacksonVersion
 }
 
 compileKotlin {

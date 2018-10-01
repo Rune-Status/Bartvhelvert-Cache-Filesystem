@@ -15,7 +15,6 @@
  */
 package io.github.runedata.cache.filesystem
 
-import io.github.runedata.cache.filesystem.util.getSmartInt
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.*
